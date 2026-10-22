@@ -82,8 +82,8 @@ test.describe('starting a run', () => {
   test('enemies spawn and the player weapon kills them', async ({ page }) => {
     await startRun(page)
     await inRun(page)
-    // enemies trickle in from off-screen, so give the spawner a few seconds of real time first
-    await page.waitForTimeout(2500)
+    // enemies trickle in from off-screen; wait for the spawner to deliver one rather than assuming a delay
+    await page.waitForFunction(() => (window.__pf.game.world as any)?.enemies.length > 0, null, { timeout: 20000 }).catch(() => {})
     const r = await page.evaluate(() => {
       const w = window.__pf.game.world as any
       return { enemies: w.enemies.length }

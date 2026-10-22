@@ -16,6 +16,7 @@ import { setTimeout as sleep } from 'node:timers/promises'
 const ROOT = resolve(process.cwd())
 const EXE = join(ROOT, 'release', 'PRISMFALL-1.0.0-portable.exe')
 const HAS_BUILD = existsSync(EXE)
+const PORT = 9400 + (process.pid % 400)
 
 test.describe('packaged build', () => {
   test.skip(!HAS_BUILD, 'no packaged build in release/ — run `npm run dist` first')
@@ -31,7 +32,7 @@ test.describe('packaged build', () => {
     const env = { ...process.env }
     delete env.ELECTRON_RUN_AS_NODE
 
-    const child = spawn(EXE, ['--remote-debugging-port=9333'], { env, stdio: 'ignore' })
+    const child = spawn(EXE, ['--remote-debugging-port=' + PORT], { env, stdio: 'ignore' })
 
     let browser: Awaited<ReturnType<typeof chromium.connectOverCDP>> | undefined
     try {
@@ -40,7 +41,7 @@ test.describe('packaged build', () => {
       for (let i = 0; i < 80; i++) {
         await sleep(500)
         try {
-          const res = await fetch('http://127.0.0.1:9333/json/version')
+          const res = await fetch(`http://127.0.0.1:${PORT}/json/version`)
           if (res.ok) {
             up = true
             break
@@ -51,7 +52,7 @@ test.describe('packaged build', () => {
       }
       expect(up, 'the packaged app should expose a devtools endpoint').toBe(true)
 
-      browser = await chromium.connectOverCDP('http://127.0.0.1:9333')
+      browser = await chromium.connectOverCDP(`http://127.0.0.1:${PORT}`)
       const ctx = browser.contexts()[0]
       expect(ctx, 'packaged app should have a browser context').toBeTruthy()
       let page = ctx.pages()[0]
@@ -78,21 +79,26 @@ test.describe('packaged build', () => {
       expect(state.renderer).toBe(true)
       expect(state.audio).toBe(true)
 
-      // advance past the title with a real key and confirm the menu appears
+      // advance past the title: click once to unlock audio, then any key advances the title screen
       await page.mouse.click(4, 4)
-      await page.keyboard.press('Enter')
+      await page.waitForTimeout(300)
+      for (let i = 0; i < 6; i++) {
+        await page.keyboard.press('Enter')
+        await page.waitForTimeout(400)
+        if (await page.locator('.mm-list').count()) break
+      }
       await page.waitForSelector('.mm-list', { timeout: 15000 })
       const entries = await page.locator('.mm-list [data-a]').count()
       expect(entries, 'packaged menu should list its entries').toBeGreaterThanOrEqual(6)
     } finally {
-      await browser?.close().catch(() => {})
-      child.kill()
-      await sleep(800)
+      // kill the whole tree first: the portable launcher spawns the real Electron child
       try {
         execFileSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore' })
       } catch {
         /* already gone */
       }
+      await browser?.close().catch(() => {})
+      await sleep(500)
     }
   })
 })

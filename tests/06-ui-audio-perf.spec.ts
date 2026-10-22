@@ -87,6 +87,8 @@ test.describe('video settings and layouts', () => {
       await page.setViewportSize({ width: w, height: h })
       await page.waitForTimeout(500)
       await toMenu(page)
+      // let the menu's entrance animation settle before measuring or clicking
+      await page.waitForTimeout(700)
       // nothing should overflow the viewport horizontally
       const over = await page.evaluate(() => {
         const bad: string[] = []
