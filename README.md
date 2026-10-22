@@ -73,6 +73,37 @@ adding a file whose `default` export is a def (or an array of defs) is enough.
 | `npm run desktop` | build and launch in Electron |
 | `npm run dist` | portable Windows build |
 | `npm run assets` | regenerate the icon and Steam capsule art |
+| `npm test` | the full Playwright suite (96 tests) |
+| `npm run test:fast` | everything except the real-play gate (quick loop) |
+| `npm run test:play` | the skilled-play gate on its own |
+| `npm run test:balance` | diagnostic survival report per stage |
+| `npm run typecheck:test` | typecheck the test sources |
+
+## Tests
+
+`tests/` drives the real build in Chromium with real keyboard and gamepad input — no state is injected to
+skip an interaction being tested. `window.__pf` is exposed for assertions and for the balance tooling.
+
+| file | covers |
+|---|---|
+| `01-navigation` | title, all seven menu entries, focus, every screen opens and escapes, content non-empty |
+| `02-gameplay` | a real click path into a run, movement, dash i-frames, spawns and kills, pause, all six starters |
+| `03-content` | 15 weapons x 7 levels, 15 passives, 21 enemies + 4 bosses, 4 stages, 6 lights, 40 achievements, Forge and ascension tables |
+| `04-progression` | XP and level-ups, cards, rerolls, skips, all three fusions, Prismatic resonance, overdrive, chests, save persistence, Forge refunds, stage unlocks |
+| `05-stages` | each stage from wave 1 through its boss to a clear, ascension scaling, endless respawn, death and run records |
+| `06-ui-audio-perf` | EN/zh, four resolutions without overflow, render scale and bloom, all 57 SFX and 9 tracks, dense-frame budget, 10-minute memory |
+| `07-real-play` | a minute of honest keyboard play, natural level-ups, death when idle, dash i-frames, every non-boss enemy killable |
+| `08-playability` | a danger-aware gate proving each of the four stages survives a skilled first minute |
+| `09-gamepad` | a virtual standard-mapping pad: detection, action mapping, d-pad focus, sticks driving move/aim, RB dash, Y burst |
+| `10-packaged` | the real `release/` portable exe boots over CDP, creates its canvas and reaches the menu |
+| `11-robustness` | corrupt/legacy/partial saves, hard quit, hidden tab, mid-run resize, pause spam, 15-minute run, two tabs |
+| `12-ascension-endless` | ascension caps at 10 and scales, endless runs past the boss, all six lights select correctly |
+
+The suite found and drove fixes for a dozen real defects — hover stealing menu selection, character and
+Forge tiles committing on a single preview click, stage cards auto-starting, `.screen.locked` blocking
+clicks, a `bloom_turret` null dereference, stale-distance pickup collection, XP starvation while kiting,
+partial saves leaving containers undefined, double-stacked pause screens, and gamepad users being unable
+to reach the Select or Forge buttons at all.
 
 ## Save data
 
