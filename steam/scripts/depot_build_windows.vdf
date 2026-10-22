@@ -1,0 +1,16 @@
+// Windows depot: everything in release/win-unpacked (PRISMFALL.exe at the depot root).
+"DepotBuild"
+{
+	"DepotID"	"1234561"	// TODO: Windows depot ID (same as in app_build.vdf)
+
+	"FileMapping"
+	{
+		"LocalPath"	"*"
+		"DepotPath"	"."
+		"Recursive"	"1"
+	}
+
+	// local-testing helper only: a Steam launch provides the App ID itself
+	"FileExclusion"	"steam_appid.txt"
+	"FileExclusion"	"*.pdb"
+}

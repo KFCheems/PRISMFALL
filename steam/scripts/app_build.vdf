@@ -1,0 +1,16 @@
+// steamcmd app build for PRISMFALL. Replace the placeholder App ID / Depot ID with the ones from Steamworks.
+// Paths are relative to this file. Upload: see README.md → "Steam upload".
+"AppBuild"
+{
+	"AppID"		"1234560"	// TODO: PRISMFALL App ID
+	"Desc"		"PRISMFALL Windows build"
+	"ContentRoot"	"../../release/win-unpacked/"	// produced by `npm run dist:dir`
+	"BuildOutput"	"../output/"	// steamcmd logs + cache (git-ignored)
+	"SetLive"	""	// e.g. "beta" to publish to a branch automatically; never "default" from a script
+	"Preview"	"0"	// "1" = dry run: build manifests, upload nothing
+
+	"Depots"
+	{
+		"1234561"	"depot_build_windows.vdf"	// TODO: Windows depot ID
+	}
+}

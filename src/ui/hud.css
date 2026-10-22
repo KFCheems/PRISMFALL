@@ -1,0 +1,464 @@
+/* PRISMFALL — in-run HUD layout. Matches the DOM built by src/ui/hud.ts. Sizes follow style.css's --u convention. */
+
+/* ───────── frame ───────── */
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  font-family: var(--font);
+  transition: opacity 0.25s;
+}
+/* results / pause / level-up own the screen */
+.hud.hide {
+  opacity: 0;
+}
+
+/* ───────── top-left: health, slots, resonance ───────── */
+.hud-tl {
+  position: absolute;
+  top: calc(var(--u) * 26);
+  left: calc(var(--u) * 22);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 10);
+  width: calc(var(--u) * 330);
+}
+.hp {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 3);
+}
+.hp-bar {
+  position: relative;
+  height: calc(var(--u) * 22);
+  background: rgba(30, 0, 8, 0.72);
+  border: 1px solid rgba(255, 90, 110, 0.42);
+  clip-path: polygon(calc(var(--u) * 8) 0, 100% 0, calc(100% - calc(var(--u) * 8)) 100%, 0 100%);
+  overflow: hidden;
+}
+.hp-bar .ghost,
+.hp-bar .fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transition: transform 0.18s;
+}
+/* ghost = the delayed white trail behind the red bar */
+.hp-bar .ghost {
+  background: rgba(255, 235, 240, 0.45);
+  transition: transform 0.45s 0.15s;
+}
+.hp-bar .fill {
+  background: linear-gradient(90deg, #ff2f52, #ff7247 65%, #ffb03d);
+  box-shadow: 0 0 calc(var(--u) * 14) rgba(255, 60, 90, 0.8);
+}
+.hp-txt {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--u) * 6);
+  font-size: calc(var(--u) * 15);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 3px #000;
+}
+.hp-txt b {
+  font-family: var(--display);
+  font-size: calc(var(--u) * 17);
+}
+.hp-txt span {
+  color: var(--dim);
+  font-weight: 500;
+}
+.hp-warn {
+  margin-left: auto;
+  font-style: normal;
+  font-size: calc(var(--u) * 13);
+  letter-spacing: 0.18em;
+  color: var(--R);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.hud.low .hp-warn {
+  opacity: 1;
+  animation: hud-blink 0.7s steps(2, end) infinite;
+}
+.hud.low .hp-bar {
+  border-color: var(--R);
+  animation: hud-blink 0.7s steps(2, end) infinite;
+}
+@keyframes hud-blink {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* build slots (weapons are 46u, passives 38u — see style.css .slot) */
+.slots {
+  display: flex;
+  gap: calc(var(--u) * 6);
+}
+.slots.passives {
+  margin-top: calc(var(--u) * 3);
+}
+.hud .slot {
+  position: relative;
+}
+/* a max-level weapon pair that can fuse gets a pulsing rainbow rim */
+.hud .slot.fuse-ready {
+  border-color: var(--Y);
+  box-shadow: 0 0 calc(var(--u) * 12) rgba(255, 210, 61, 0.55);
+  animation: hud-fuse 1.1s ease-in-out infinite alternate;
+}
+@keyframes hud-fuse {
+  to {
+    box-shadow: 0 0 calc(var(--u) * 18) rgba(255, 210, 61, 0.95), inset 0 0 calc(var(--u) * 10) rgba(255, 210, 61, 0.3);
+  }
+}
+.hud .slot.max {
+  border-color: color-mix(in srgb, var(--c) 85%, #fff);
+}
+
+/* resonance rows: one per hue, six segments each */
+.hud .res {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 3);
+  width: calc(var(--u) * 330);
+  margin-top: calc(var(--u) * 5);
+}
+.rrow {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 6);
+  opacity: 0.55;
+  font-size: calc(var(--u) * 11);
+  letter-spacing: 0.1em;
+  transition: opacity 0.25s;
+}
+.rrow b {
+  width: calc(var(--u) * 10);
+  font-family: var(--display);
+  font-weight: 800;
+  color: var(--c);
+  text-shadow: 0 0 calc(var(--u) * 6) var(--c);
+}
+.rrow .segs {
+  display: flex;
+  gap: 1px;
+  width: calc(var(--u) * 84);
+}
+.rrow .segs i {
+  flex: 1;
+  height: calc(var(--u) * 4);
+  background: rgba(255, 255, 255, 0.1);
+}
+.rrow .segs i.f {
+  background: var(--c);
+  box-shadow: 0 0 calc(var(--u) * 5) var(--c);
+}
+.rrow em {
+  font-style: normal;
+  color: var(--dim);
+  white-space: nowrap;
+}
+.rrow.on {
+  opacity: 0.95;
+}
+.rrow.max {
+  opacity: 1;
+}
+.rrow.max em {
+  color: var(--c);
+  text-shadow: 0 0 calc(var(--u) * 6) var(--c);
+}
+.rrow.max .segs i {
+  height: calc(var(--u) * 6);
+}
+
+/* ───────── top-center: timer, boss countdown, boss bar ───────── */
+.hud-tc {
+  position: absolute;
+  top: calc(var(--u) * 22);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--u) * 6);
+  width: calc(var(--u) * 480);
+}
+.timer {
+  font-family: var(--display);
+  font-size: calc(var(--u) * 42);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 calc(var(--u) * 16) rgba(150, 190, 255, 0.85);
+}
+.prog {
+  position: relative;
+  width: calc(var(--u) * 380);
+  height: calc(var(--u) * 5);
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--line);
+  transition: opacity 0.3s;
+}
+.prog.off {
+  opacity: 0;
+}
+.prog .fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(140, 170, 255, 0.35), rgba(200, 225, 255, 0.85));
+}
+.prog .skull {
+  position: absolute;
+  right: calc(var(--u) * -18);
+  top: 50%;
+  width: calc(var(--u) * 15);
+  height: calc(var(--u) * 15);
+  transform: translateY(-50%);
+  color: var(--dim);
+}
+.prog .skull svg {
+  width: 100%;
+  height: 100%;
+}
+.prog small {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--u) * 12);
+  transform: translateX(-50%);
+  font-size: calc(var(--u) * 13);
+  letter-spacing: 0.2em;
+  color: var(--dim);
+  white-space: nowrap;
+}
+.prog.near small {
+  color: var(--R);
+  text-shadow: 0 0 calc(var(--u) * 8) var(--R);
+  animation: hud-blink 0.8s steps(2, end) infinite;
+}
+
+/* boss: name plate + segmented bar */
+.boss {
+  width: 100%;
+  opacity: 0;
+  transform: translateY(calc(var(--u) * -6));
+  transition: opacity 0.4s, transform 0.4s;
+}
+.boss.on {
+  opacity: 1;
+  transform: none;
+}
+.bname b {
+  font-family: var(--display);
+  font-size: calc(var(--u) * 24);
+  letter-spacing: 0.18em;
+  color: var(--c);
+  text-shadow: 0 0 calc(var(--u) * 14) var(--c);
+}
+.bname small {
+  display: block;
+  font-size: calc(var(--u) * 12);
+  letter-spacing: 0.24em;
+  color: var(--dim);
+}
+.bbar {
+  position: relative;
+  height: calc(var(--u) * 13);
+  margin-top: calc(var(--u) * 5);
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 210, 120, 0.4);
+  overflow: hidden;
+}
+.bbar .ghost,
+.bbar .fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+}
+.bbar .ghost {
+  background: rgba(255, 245, 210, 0.5);
+  transition: transform 0.5s 0.2s;
+}
+.bbar .fill {
+  background: linear-gradient(90deg, var(--M), var(--R) 55%, var(--Y));
+  box-shadow: 0 0 calc(var(--u) * 12) var(--R);
+  transition: transform 0.16s;
+}
+.bbar .ticks {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+.bbar .ticks i {
+  flex: 1;
+  border-right: 1px solid rgba(0, 0, 0, 0.55);
+}
+
+/* ───────── top-right: level, kills, lumens ───────── */
+.hud-tr {
+  position: absolute;
+  top: calc(var(--u) * 26);
+  right: calc(var(--u) * 24);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: calc(var(--u) * 4);
+}
+.hud-tr .lv {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--u) * 5);
+  font-family: var(--display);
+}
+.hud-tr .lv small {
+  font-size: calc(var(--u) * 14);
+  letter-spacing: 0.18em;
+  color: var(--dim);
+}
+.hud-tr .lv b {
+  font-size: calc(var(--u) * 34);
+  font-weight: 800;
+  text-shadow: 0 0 calc(var(--u) * 14) var(--C);
+}
+.hud-tr .stat {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 5);
+  font-family: var(--display);
+  font-size: calc(var(--u) * 17);
+  font-weight: 700;
+}
+.hud-tr .stat svg {
+  width: calc(var(--u) * 13);
+  height: calc(var(--u) * 13);
+}
+.hud-tr .kills {
+  color: #cfe0ff;
+}
+.hud-tr .lumens {
+  color: var(--Y);
+  text-shadow: 0 0 calc(var(--u) * 8) rgba(255, 210, 61, 0.6);
+}
+.hud-tr .lumens svg {
+  fill: var(--Y);
+}
+
+/* ───────── bottom-center: dash ring + overdrive bar ───────── */
+.hud-bc {
+  position: absolute;
+  bottom: calc(var(--u) * 26);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--u) * 8);
+}
+.dash {
+  position: relative;
+  width: calc(var(--u) * 34);
+  height: calc(var(--u) * 34);
+  display: grid;
+  place-items: center;
+}
+.dash .ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(var(--C) calc(var(--k, 0) * 360deg), rgba(255, 255, 255, 0.1) 0);
+  mask: radial-gradient(circle, transparent 58%, #000 60%);
+  -webkit-mask: radial-gradient(circle, transparent 58%, #000 60%);
+}
+.dash .dg {
+  font-size: calc(var(--u) * 13);
+  opacity: 0.5;
+}
+.dash.ready .dg {
+  opacity: 1;
+  color: var(--C);
+  text-shadow: 0 0 calc(var(--u) * 8) var(--C);
+}
+.od {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--u) * 5);
+}
+.od-bar {
+  position: relative;
+  width: calc(var(--u) * 400);
+  height: calc(var(--u) * 11);
+  background: rgba(0, 0, 0, 0.62);
+  border: 1px solid var(--line);
+  transform: skewX(-18deg);
+  overflow: hidden;
+}
+.od-bar .fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  background: linear-gradient(90deg, var(--R), var(--Y) 35%, var(--G) 65%, var(--B));
+  opacity: 0.8;
+}
+.od-lbl {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 8);
+  font-size: calc(var(--u) * 14);
+  letter-spacing: 0.24em;
+  color: var(--dim);
+  white-space: nowrap;
+}
+.od.ready .od-bar {
+  border-color: #fff;
+  box-shadow: 0 0 calc(var(--u) * 18) rgba(255, 255, 255, 0.55);
+}
+.od.ready .od-bar .fill {
+  opacity: 1;
+  animation: hud-od 0.55s ease-in-out infinite alternate;
+}
+@keyframes hud-od {
+  to {
+    filter: brightness(1.75) saturate(1.3);
+  }
+}
+.od.ready .od-lbl {
+  color: #fff;
+  text-shadow: 0 0 calc(var(--u) * 10) #fff;
+}
+.od.ready .od-lbl b {
+  font-family: var(--display);
+  letter-spacing: 0.3em;
+}
+
+/* ───────── tutorial tips ───────── */
+.tips {
+  position: absolute;
+  bottom: calc(var(--u) * 110);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--u) * 6);
+}
+.tip {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 9);
+  padding: calc(var(--u) * 7) calc(var(--u) * 16);
+  background: rgba(6, 8, 22, 0.72);
+  border-left: calc(var(--u) * 3) solid var(--C);
+  font-size: calc(var(--u) * 15);
+  opacity: 0;
+  transform: translateY(calc(var(--u) * 8));
+  transition: opacity 0.35s, transform 0.35s;
+}
+.tip.on {
+  opacity: 0.92;
+  transform: none;
+}

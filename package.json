@@ -1,0 +1,80 @@
+{
+  "name": "prismfall",
+  "productName": "PRISMFALL",
+  "version": "1.0.0",
+  "description": "PRISMFALL - a neon roguelite survival shooter about bending light.",
+  "author": "PRISMFALL Team",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview",
+    "start": "electron .",
+    "desktop": "vite build && electron .",
+    "dist": "vite build && electron-builder --win --x64",
+    "dist:dir": "vite build && electron-builder --win --x64 --dir",
+    "assets": "node build/make-assets.mjs"
+  },
+  "devDependencies": {
+    "electron": "^44.9.0",
+    "electron-builder": "^26.15.3",
+    "sharp": "^0.35.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4"
+  },
+  "dependencies": {
+    "@fontsource/orbitron": "^5.3.0",
+    "@fontsource/rajdhani": "^5.3.0",
+    "steamworks.js": "^0.4.0"
+  },
+  "build": {
+    "appId": "com.prismfall.game",
+    "productName": "PRISMFALL",
+    "copyright": "Copyright © 2026 PRISMFALL Team",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**",
+      "electron/**",
+      "package.json",
+      "!node_modules/@fontsource/**",
+      "!node_modules/steamworks.js/dist/{linux64,osx}/**",
+      "!node_modules/steamworks.js/**/*.{lib,d.ts,md}"
+    ],
+    "extraFiles": [
+      "steam_appid.txt",
+      {
+        "from": "node_modules/steamworks.js/dist/win64/steam_api64.dll",
+        "to": "steam_api64.dll"
+      }
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/steamworks.js/dist/**"
+    ],
+    "electronLanguages": [
+      "en-US",
+      "zh-CN",
+      "zh-TW"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-portable.${ext}"
+    }
+  }
+}

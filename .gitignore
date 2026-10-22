@@ -1,0 +1,35 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+release/
+steam/output/
+
+# electron-builder caches
+.cache/
+*.tsbuildinfo
+
+# test / capture artifacts
+.playwright-mcp/
+*.log
+/tmp/
+/tools/
+
+# editor & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# local secrets / env (never commit)
+.env
+.env.*
+!.env.example
+steam_appid.local.txt
+
+# superseded pre-work snapshots and old captures (kept on disk, not in the repo)
+.backup/
+.shots/
