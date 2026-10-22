@@ -11,7 +11,7 @@ const SPORE: RGB = hex('#b6ff5c')
 
 const sporeling: EnemyDef = {
   id: 'sporeling', name: l('Sporeling', '孢子体'), desc: l('A drifting pod. Kill it and its last breath bursts into a cloud of spores.', '一颗飘荡的荚。杀死它，它最后的一口气会炸成一团孢子雾。'),
-  shape: Shape.Circle, color: hex('#63dd6a'), r: 12, hp: 16, speed: 80, dmg: 8, xp: 2,
+  shape: Shape.Circle, color: hex('#63dd6a'), r: 12, hp: 14, speed: 80, dmg: 8, xp: 3,
   ai(e, w, dt) {
     w.chase(e, dt)
     const wob = Math.cos(e.t * 2.4 + e.id) * 22 * dt
@@ -19,10 +19,12 @@ const sporeling: EnemyDef = {
     e.y += Math.cos(e.rot) * wob
   },
   death(e, w) {
-    // lingering spore cloud — telegraphed, so the danger reads before it bites
-    w.hazard({ kind: 'circle', x: e.x, y: e.y, r: 72, delay: 0.5, active: 2.2, dmg: e.dmg * 0.7, color: SPORE })
-    w.ringFx(e.x, e.y, e.r * 2.2, SPORE)
-    w.sfx('spore', { vol: 0.3, x: e.x }, 0.05)
+    // Lingering spore cloud — telegraphed, and much smaller than the body's threat radius so a player who
+    // keeps moving walks out of it. Killing a tight pack must not paint the floor with overlapping kill
+    // zones, which is what made the Verdant Lattice unplayable.
+    w.hazard({ kind: 'circle', x: e.x, y: e.y, r: 40, delay: 0.6, active: 1.2, dmg: e.dmg * 0.4, color: SPORE })
+    w.ringFx(e.x, e.y, e.r * 1.6, SPORE)
+    w.sfx('spore', { vol: 0.25, x: e.x }, 0.05)
   },
   draw(e) {
     body(e, Shape.Circle, e.r * 0.85, e.r * 0.85, e.rot)
@@ -37,7 +39,7 @@ const sporeling: EnemyDef = {
 const WEAVE_T = 2.6
 const weaver: EnemyDef = {
   id: 'weaver', name: l('Weaver', '织网者'), desc: l('Circles you at a distance, threading the air with lattice rings.', '远距离环绕着你，用一圈圈晶格网线编织天空。'),
-  shape: Shape.Hex, color: hex('#3df07a'), r: 16, hp: 30, speed: 105, dmg: 11, xp: 4,
+  shape: Shape.Hex, color: hex('#3df07a'), r: 16, hp: 30, speed: 105, dmg: 11, xp: 5,
   spawn: (e) => void (e.timer = rand(1.4, 2.4)),
   ai(e, w, dt) {
     // orbit at range, drifting the orbit direction slowly
@@ -65,10 +67,12 @@ const weaver: EnemyDef = {
   },
 }
 
-const HEAL_R = 150, HEAL_CD = 2.4, HEAL_AMT = 0.12
+// Menders are a priority target, not an unkillable wall: a modest heal on a slow clock, and only to
+// wounded allies. Stacking several should tax the player's DPS, never out-heal it outright.
+const HEAL_R = 130, HEAL_CD = 3.6, HEAL_AMT = 0.06
 const mender: EnemyDef = {
   id: 'mender', name: l('Mender', '愈疗者'), desc: l('A quiet bloom that pours life back into its kin. Cut it out first.', '一朵安静的花，把生命灌回同族体内。先把它摘掉。'),
-  shape: Shape.Pent, color: hex('#7dffb0'), r: 14, hp: 28, speed: 72, dmg: 9, xp: 4,
+  shape: Shape.Pent, color: hex('#7dffb0'), r: 14, hp: 28, speed: 72, dmg: 9, xp: 5,
   spawn: (e) => void (e.timer = HEAL_CD),
   ai(e, w, dt) {
     // hover near the player but behind its allies, seeking the thickest cluster
@@ -104,7 +108,7 @@ const mender: EnemyDef = {
 const HIVE_CD = 3.2
 const hive: EnemyDef = {
   id: 'hive', name: l('Hive', '蜂巢'), desc: l('Rooted and patient. It keeps seeding motes until you tear it out.', '扎根、蛰伏，源源不断地孕育微尘，直到你将它连根拔起。'),
-  shape: Shape.Box, color: hex('#4fd67a'), r: 22, hp: 60, speed: 0, dmg: 12, xp: 6, mass: 6,
+  shape: Shape.Box, color: hex('#4fd67a'), r: 22, hp: 60, speed: 0, dmg: 12, xp: 8, mass: 6,
   spawn(e) {
     e.timer = rand(1.5, 3)
     e.data.base = { x: e.x, y: e.y }
@@ -135,7 +139,7 @@ const hive: EnemyDef = {
 const HOP_AIR = 0.55, HOP_LAND = 0.45
 const leaper: EnemyDef = {
   id: 'leaper', name: l('Leaper', '跃藤'), desc: l('Crouches, marks the ground, then springs. Mind the shadow.', '蓄力、标记落点，然后弹射。小心那道影子。'),
-  shape: Shape.Tri, color: hex('#8bff6e'), r: 13, hp: 24, speed: 90, dmg: 12, xp: 3,
+  shape: Shape.Tri, color: hex('#8bff6e'), r: 13, hp: 20, speed: 90, dmg: 8, xp: 4,
   spawn(e) { e.timer = rand(0.8, 1.6); e.data.h = undefined },
   ai(e, w, dt) {
     const d = e.data

@@ -48,7 +48,8 @@ export class ForgeScreen extends Screen {
         <button class="btn small" data-nav data-a="refund" ${save.data.forgeSpent > 0 ? '' : 'disabled'}>${loc(l('Refund All', '全部退款'))} · ${lumens(fmtNum(save.data.forgeSpent))}</button>
       </div>
       ${prompts([['confirm', T.select], ['back', T.back]])}`
-    this.on('.fg-item', (b) => this.choose(byId.get(b.dataset.id!)!))
+    // clicking a tile previews it; the buy button in the detail panel commits the purchase
+    this.on('.fg-item', (b) => this.show(byId.get(b.dataset.id!)!))
     this.$('[data-a=refund]').addEventListener('click', () => this.refund())
     this.show(byId.get('might')!)
   }

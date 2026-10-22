@@ -16,9 +16,16 @@
     "desktop": "vite build && electron .",
     "dist": "vite build && electron-builder --win --x64",
     "dist:dir": "vite build && electron-builder --win --x64 --dir",
-    "assets": "node build/make-assets.mjs"
+    "assets": "node build/make-assets.mjs",
+    "test": "playwright test",
+    "test:fast": "playwright test --grep-invert \"playability gate\"",
+    "test:play": "playwright test tests/08-playability.spec.ts",
+    "test:balance": "node tests/tools/run-balance.mjs",
+    "typecheck:test": "tsc -p tsconfig.test.json --noEmit"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^26.6.5",
     "electron": "^44.9.0",
     "electron-builder": "^26.15.3",
     "sharp": "^0.35.5",

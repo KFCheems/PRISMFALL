@@ -66,7 +66,9 @@ export const BASE_STATS = (): Stats => ({
   duration: 1,
   amount: 0,
   pierce: 0,
-  magnet: 80,
+  // Pickup vacuum radius. Generous by default: in a bullet heaven the player is always moving, so a
+  // tight radius means kiting (the core defensive skill) also starves you of XP.
+  magnet: 180,
   luck: 1,
   growth: 1,
   greed: 1,

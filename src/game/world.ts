@@ -469,7 +469,9 @@ export class World {
     if (p.iframes > 0 || p.dead || this.ending) return
     dmg = Math.max(1, dmg * this.mods.dmg - p.stats.armor)
     p.hp -= dmg
-    p.iframes = 0.55
+    // Longer invulnerability the more hurt you already are: a burst that lands while you are low must not
+    // chain into an instant death, which is what makes a crowded screen feel unfair rather than hard.
+    p.iframes = p.hp < p.stats.maxHp * 0.35 ? 0.9 : 0.6
     this.dmgTaken += dmg
     this.lastHit = this.time
     this.shake(0.45)
@@ -551,6 +553,9 @@ export class World {
       p.level++
       p.pending++
       p.xpNext = xpForLevel(p.level)
+      // a small heal on every level keeps a good run from dying to accumulated chip damage; it is also
+      // what makes "keep killing" a survivable strategy rather than a pure DPS race
+      if (p.hp < p.stats.maxHp) this.heal(p.stats.maxHp * 0.06, true)
       p.char.onLevel?.(this)
     }
   }
@@ -650,10 +655,20 @@ export class World {
           e.y = a.y + (dy / d) * max
         }
       }
-      // contact damage
+      // contact damage — the touching body is shoved back, so a swarm cannot pin the player in place.
+      // The shove is small: standing in a crowd is still lethal, it just does not instantly trap you.
       if (!p.dead) {
         const rr = e.r + p.r * 0.8
-        if (dist2(e.x, e.y, p.x, p.y) < rr * rr && e.dmg > 0 && e.freeze <= 0) this.hurt(e.dmg)
+        if (dist2(e.x, e.y, p.x, p.y) < rr * rr && e.dmg > 0 && e.freeze <= 0) {
+          const before = p.iframes
+          this.hurt(e.dmg)
+          if (p.iframes > before) {
+            const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy) || 1
+            const shove = 70 / Math.max(1, e.mass)
+            e.kbx += (dx / d) * shove
+            e.kby += (dy / d) * shove
+          }
+        }
       }
       // recycle stragglers in front of the player
       if (!e.boss && dist2(e.x, e.y, p.x, p.y) > despawn * despawn) {
@@ -806,21 +821,33 @@ export class World {
     for (const pk of this.pickups) {
       if (pk.dead) continue
       pk.t += dt
+      // recompute every frame: orbs and the player both move, and collecting must use the CURRENT distance
       const dx = p.x - pk.x, dy = p.y - pk.y, d2 = dx * dx + dy * dy
       if (!pk.pull && pk.kind !== 'chest' && d2 < mag * mag && pk.t > 0.25) pk.pull = true
+      // Long-lived XP slowly drifts in, so a kiting player is never permanently starved of the progression
+      // that dropped behind them. This is the genre-standard affordance; it does not apply to chests.
+      if (!pk.pull && pk.kind === 'xp' && pk.t > 2.5) {
+        const d = Math.sqrt(d2) || 1
+        const sp = Math.min(150, 26 + (pk.t - 2.5) * 45)
+        pk.vx += ((dx / d) * sp - pk.vx) * Math.min(1, dt * 3)
+        pk.vy += ((dy / d) * sp - pk.vy) * Math.min(1, dt * 3)
+      }
       if (pk.pull && !p.dead) {
         const d = Math.sqrt(d2) || 1, sp = 250 + pk.t * 120 + (pk.kind === 'xp' ? 200 : 0)
         pk.vx = damp(pk.vx, (dx / d) * sp, 9, dt)
         pk.vy = damp(pk.vy, (dy / d) * sp, 9, dt)
-      } else {
+      } else if (!pk.vx && !pk.vy) {
+        // nothing to do — keeps the damp branch below from zeroing the drift above
+      } else if (!(pk.kind === 'xp' && pk.t > 2.5)) {
         const k = Math.exp(-4 * dt)
         pk.vx *= k
         pk.vy *= k
       }
       pk.x += pk.vx * dt
       pk.y += pk.vy * dt
-      const rr = p.r + 14
-      if (d2 < rr * rr && !p.dead) this.collect(pk)
+      // collect against the post-move positions, not the stale pre-move distance
+      const cx = p.x - pk.x, cy = p.y - pk.y, rr = p.r + 16
+      if (cx * cx + cy * cy < rr * rr && !p.dead) this.collect(pk)
     }
     this.xpComboT -= dt
     if (this.xpComboT <= 0) this.xpCombo = 0

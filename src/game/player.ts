@@ -7,7 +7,12 @@ import type { CharacterDef, Hue, PassiveInst, Stats, WeaponInst } from './types'
 import { SHOP } from './registry'
 import type { World } from './world'
 
-export const xpForLevel = (lv: number) => Math.round(5 + lv * 7 + Math.max(0, lv - 15) * 4 + Math.max(0, lv - 35) * 8)
+/**
+ * XP needed to go from `lv` to `lv+1`. A run should reach roughly level 25-35 by the 10-minute boss
+ * (a level-up every 15-25 s in the mid game), so this stays cheap early and grows smoothly rather
+ * than exploding: ~1,900 total XP to Lv 30, about 1,100 kills.
+ */
+export const xpForLevel = (lv: number) => Math.round(4 + lv * 4.5 + Math.max(0, lv - 12) * 2.2 + Math.max(0, lv - 30) * 3.5)
 
 const DASH_SPEED = 1100
 const DASH_TIME = 0.15

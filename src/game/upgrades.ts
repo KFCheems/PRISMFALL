@@ -82,14 +82,17 @@ const FILLERS = (): Choice[] => [
 export function rollChoices(w: World, n = w.p.stats.choices + (chance((w.p.stats.luck - 1) * 0.6) ? 1 : 0)): Choice[] {
   const p = w.p
   const pool: { c: Choice; wt: number }[] = []
-  for (const wi of p.weapons) if (wi.level < WEAPON_MAX) pool.push({ c: weaponChoice(wi.def, wi), wt: 3 })
+  // Upgrading what you already own is the strong play, and the offers must reflect that: a run that keeps
+  // being handed brand-new level-1 weapons spreads itself thin and dies. Existing items outrank new ones by
+  // a wide margin, and a weapon already at a high level is even more attractive.
+  for (const wi of p.weapons) if (wi.level < WEAPON_MAX) pool.push({ c: weaponChoice(wi.def, wi), wt: 6 + wi.level })
   if (p.weapons.length < WEAPON_SLOTS)
     for (const d of WEAPONS)
-      if (isUnlocked(d) && !p.banished.has(d.id) && !p.weapons.some((x) => x.def.id === d.id)) pool.push({ c: weaponChoice(d), wt: 1.5 })
-  for (const pi of p.passives) if (pi.level < PASSIVE_MAX) pool.push({ c: passiveChoice(pi.def, pi.level), wt: 2.2 })
+      if (isUnlocked(d) && !p.banished.has(d.id) && !p.weapons.some((x) => x.def.id === d.id)) pool.push({ c: weaponChoice(d), wt: 1.2 })
+  for (const pi of p.passives) if (pi.level < PASSIVE_MAX) pool.push({ c: passiveChoice(pi.def, pi.level), wt: 4 + pi.level })
   if (p.passives.length < PASSIVE_SLOTS)
     for (const d of PASSIVES)
-      if (isUnlocked(d) && !p.banished.has(d.id) && !p.passives.some((x) => x.def.id === d.id)) pool.push({ c: passiveChoice(d, 0), wt: 1.3 })
+      if (isUnlocked(d) && !p.banished.has(d.id) && !p.passives.some((x) => x.def.id === d.id)) pool.push({ c: passiveChoice(d, 0), wt: 1.1 })
 
   const out: Choice[] = []
   const fusions = fusionPairs(w)

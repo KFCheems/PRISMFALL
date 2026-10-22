@@ -10,7 +10,7 @@ const WRITE: RGB = hex('#e8e6ff')
 const FLICK_T = 0.45, BLINK_DIST = 90
 const phantom: EnemyDef = {
   id: 'phantom', name: l('Phantom', '虚影'), desc: l('Flickers out of phase, then reappears at your shoulder. Watch the shimmer.', '相位闪烁后，出现在你肩侧。留意那道微光。'),
-  shape: Shape.Diamond, color: hex('#a06bff'), r: 13, hp: 34, speed: 110, dmg: 13, xp: 5,
+  shape: Shape.Diamond, color: hex('#a06bff'), r: 13, hp: 34, speed: 110, dmg: 13, xp: 8,
   spawn(e) { e.timer = rand(1.2, 2); e.data.vanish = false },
   ai(e, w, dt) {
     const d = e.data
@@ -50,7 +50,7 @@ const phantom: EnemyDef = {
 const SPIRAL_CD = 0.16
 const sentry: EnemyDef = {
   id: 'sentry', name: l('Sentry', '哨塔'), desc: l('Anchored in the dark, painting the air with a slow spiral of light.', '钉在黑暗里，用缓慢旋转的螺旋光把空气填满。'),
-  shape: Shape.Oct, color: hex('#7a5cff'), r: 20, hp: 55, speed: 0, dmg: 12, xp: 6, mass: 5,
+  shape: Shape.Oct, color: hex('#7a5cff'), r: 20, hp: 55, speed: 0, dmg: 12, xp: 9, mass: 5,
   spawn(e) { e.timer = 0; e.data.ang = rand(0, TAU); e.data.base = { x: e.x, y: e.y } },
   ai(e, w, dt) {
     pin(e, e.data.base.x, e.data.base.y)
@@ -75,7 +75,7 @@ const sentry: EnemyDef = {
 const LASER_AIM = 1.0, LASER_T = 0.18
 const void_eye: EnemyDef = {
   id: 'void_eye', name: l('Void Eye', '虚空之眼'), desc: l('It fixes a line on you, holds it, and then the line becomes light.', '它在你身上锁定一条线，静持片刻——然后那条线化作光。'),
-  shape: Shape.Circle, color: hex('#b17cff'), r: 18, hp: 48, speed: 55, dmg: 14, xp: 6,
+  shape: Shape.Circle, color: hex('#b17cff'), r: 18, hp: 48, speed: 55, dmg: 14, xp: 8,
   spawn(e) { e.timer = rand(1.5, 2.5); e.data.h = undefined },
   ai(e, w, dt) {
     const d = e.data, h = d.h as Hazard | undefined
@@ -116,7 +116,7 @@ const void_eye: EnemyDef = {
 
 const swarmer: EnemyDef = {
   id: 'swarmer', name: l('Swarmer', '群刺'), desc: l('Tiny, fast, and never alone. They arrive as a glinting pack.', '微小、迅捷，从不独行。它们成群结队、闪着寒光扑来。'),
-  shape: Shape.Tri, color: hex('#8f7bff'), r: 7, hp: 10, speed: 165, dmg: 7, xp: 2,
+  shape: Shape.Tri, color: hex('#8f7bff'), r: 7, hp: 10, speed: 165, dmg: 7, xp: 3,
   ai(e, w, dt) {
     w.chase(e, dt)
     // slight jitter so a pack fans out instead of overlapping in a single line
@@ -130,7 +130,7 @@ const swarmer: EnemyDef = {
 const COLOSSUS_HEAL = 0.004
 const colossus: EnemyDef = {
   id: 'colossus', name: l('Colossus', '虚空巨像'), desc: l('A cathedral of violet angles. Every wound it takes births another pest.', '一座紫晶棱角的巨殿。每受一次伤，便孕育出又一只害虫。'),
-  shape: Shape.Oct, color: hex('#8a5cff'), r: 42, hp: 190, speed: 38, dmg: 24, xp: 20, mass: 12,
+  shape: Shape.Oct, color: hex('#8a5cff'), r: 42, hp: 190, speed: 38, dmg: 24, xp: 26, mass: 12,
   spawn(e) { e.data.spawned = 0; e.data.lastHp = e.hp },
   ai(e, w, dt) {
     w.chase(e, dt)

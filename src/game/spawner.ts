@@ -35,8 +35,14 @@ export class Spawner {
     const cur = this.wave(t)
     if (cur && (!fighting || w.opts.endless)) {
       const { wave, k, boost } = cur
-      const rate = lerp(wave.rate[0], wave.rate[1], k) * w.mods.rate * boost * (fighting ? 0.4 : 1)
-      const cap = (wave.cap ?? 380) * (fighting ? 0.5 : 1)
+      // Pressure governor. A bullet heaven only stays fun while the player can out-kill the spawns, and
+      // the player's throughput swings by an order of magnitude over a run. So the wave's *design* rate is
+      // treated as a ceiling: spawning slows down as the screen fills toward what this build can handle.
+      const comfort = this.comfort()
+      const pressure = w.enemies.length / comfort
+      const throttle = pressure <= 1 ? 1 : Math.max(0.06, 1 / (pressure * pressure * pressure))
+      const rate = lerp(wave.rate[0], wave.rate[1], k) * w.mods.rate * boost * throttle * (fighting ? 0.4 : 1)
+      const cap = Math.min(wave.cap ?? 380, Math.max(24, comfort * 1.6)) * (fighting ? 0.5 : 1)
       this.acc += rate * dt
       while (this.acc >= 1) {
         this.acc--
@@ -68,6 +74,28 @@ export class Spawner {
       const a = rand(0, TAU)
       w.spawnEnemy(this.stage.boss, p.x + Math.cos(a) * 320, p.y + Math.sin(a) * 320, { hpMul: 1 + w.bossKills * 0.8 })
     }
+  }
+
+  /**
+   * How many live enemies this build can plausibly keep up with.
+   *
+   * Measured, not theoretical: a Lv 1 starter clears roughly 0.5–1 body/s, and a developed six-weapon
+   * build 3–6/s. Raw DPS overstates this badly (projectiles travel and miss, and the player is dodging),
+   * so the population budget is derived from a deliberately pessimistic throughput estimate.
+   */
+  private comfort() {
+    const w = this.w, p = w.p
+    let dps = 0
+    for (const wi of p.weapons) {
+      const s = w.weaponStats(wi)
+      dps += s.cd > 0 ? (s.dmg * Math.max(1, s.amount)) / s.cd : s.dmg * 4
+    }
+    // A projectile only converts ~25% of its paper DPS into kills once travel, overkill and aiming are counted.
+    const realDps = dps * 0.28
+    const avgHp = 26 * w.mods.hp
+    const killsPerSec = realDps / avgHp
+    // ~14 s of standing work on screen: crowded enough to feel like a bullet heaven, never a wall.
+    return Math.max(32, Math.min(300, killsPerSec * 14))
   }
 
   private run(ev: StageEvent) {

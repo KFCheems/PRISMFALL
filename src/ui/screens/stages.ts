@@ -36,7 +36,9 @@ export class StageSelectScreen extends Screen {
   constructor(readonly char: CharacterDef) {
     super('stages menu')
     const m = memo(), open = STAGES.filter((s) => isStageUnlocked(s.id))
-    this.st = open.find((s) => s.id === m.stage) ?? open.find((s) => !cleared(s)) ?? open[open.length - 1]
+    // default to the remembered stage, else the first one not yet cleared, else the deepest unlocked
+    const remembered = open.find((s) => s.id === m.stage)
+    this.st = remembered ?? open.find((s) => !cleared(s)) ?? open[open.length - 1]
     this.asc = Math.min(m.asc?.[this.st.id] ?? 0, maxAsc(this.st))
     this.endless = !!m.endless && cleared(this.st)
     this.render()
@@ -57,13 +59,12 @@ export class StageSelectScreen extends Screen {
       <div class="ss-cfg panel st" style="--i:5"></div>
       ${prompts([['confirm', l('Start', '出发')], ['back', T.back]])}`
     this.on('.sc', (b) => {
+      // a card click always selects; only the Start button launches, so a double click can't skip the config
       const s = stageById.get(b.dataset.id!)!
       if (!isStageUnlocked(s.id)) return audio.sfx('uiDeny')
-      if (s === this.st) this.start()
-      else {
-        audio.sfx('uiMove')
-        this.select(s)
-      }
+      audio.sfx('uiMove')
+      this.select(s)
+      ui.setFocus(b, true)
     })
     this.cfg()
   }

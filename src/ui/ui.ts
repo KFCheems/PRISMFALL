@@ -66,6 +66,9 @@ class UI {
     this.over.className = 'layer toasts'
     root.append(this.layer, this.over)
     root.addEventListener('pointerover', (e) => {
+      // Only a real pointer movement may move the selection. When a screen opens, the mouse is often left
+      // sitting over whatever has just appeared underneath it; that must not silently change the pick.
+      if (performance.now() - input.mouse.lastMove > 120) return
       const t = (e.target as HTMLElement).closest<HTMLElement>('[data-nav]')
       if (t && this.top?.el.contains(t) && t !== this.focus && !t.hasAttribute('disabled')) this.setFocus(t, true, true)
     })

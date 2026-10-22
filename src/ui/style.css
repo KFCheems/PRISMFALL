@@ -83,8 +83,11 @@ canvas {
   opacity: 0;
   pointer-events: none;
 }
+/* Input during the brief opening lock is already gated in ui.ts (ui.press / ui.trigger / update).
+   Do NOT set pointer-events:none here: it also kills clicks on cards/buttons the instant a screen
+   opens, which browsers then treat as a dead zone and Playwright retries until timeout. */
 .screen.locked {
-  pointer-events: none;
+  cursor: progress;
 }
 .levelup,
 .chest,

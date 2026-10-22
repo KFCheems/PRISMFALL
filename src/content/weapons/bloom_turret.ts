@@ -37,6 +37,9 @@ function launch(wi: WeaponInst, w: World, x: number, y: number, life: number): S
   }, wi)
 }
 
+/** a shot carrying the sentinel payload (its own turret), as opposed to the bolts it fires */
+const isSentinel = (q: Shot) => !!q.data && typeof (q.data as Sentinel).life === 'number' && typeof (q.data as Sentinel).bloom === 'number'
+
 /** sentinel brain: settle, track nearest foe, and spit darts on its own cooldown */
 function fire(d: Shot, w: World, dt: number) {
   const wi = d.src!, g = wi.state as Garden, s = g.s, D = d.data as Sentinel
@@ -95,15 +98,16 @@ export default {
     const g = wi.state as Garden
     g.s = s
     g.flower = (g.flower ?? 0) + dt * 2
-    // prune any sentinels that died or exceed the current count, and keep their lifetime in step with the stat block
-    const live = w.shots.filter((q) => q.src === wi && !q.dead)
+    // Sentinels are the only shots from this weapon carrying a `Sentinel` payload; their bolts share the
+    // same `src` but have no data, so filter on the payload shape rather than the source alone.
+    const live = w.shots.filter((q) => q.src === wi && !q.dead && isSentinel(q))
     while (live.length > s.amount) live.pop()!.dead = true
     for (const q of live) (q.data as Sentinel).life = Math.min((q.data as Sentinel).life, s.duration)
   },
   fire(wi, w, s) {
     const p = w.p, col = w.color(wi), base = Math.atan2(p.aim.y, p.aim.x)
     // top the garden up to `amount` sentinels instead of replanting the whole bed on every cooldown
-    const live = w.shots.filter((q) => q.src === wi && !q.dead).length
+    const live = w.shots.filter((q) => q.src === wi && !q.dead && isSentinel(q)).length
     for (let i = live; i < s.amount; i++) {
       // scatter sentinels in a loose arc ahead of the player so they cover ground
       const a = base + (i - (s.amount - 1) / 2) * 0.7 + rand(-0.2, 0.2), d = rand(46, 90) * s.area

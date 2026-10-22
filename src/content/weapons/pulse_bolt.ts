@@ -6,10 +6,13 @@ import type { Enemy, Shot, WeaponDef, WeaponInst, WeaponLevel } from '../../game
 import type { World } from '../../game/world'
 
 // per-level tables (index = level-1)
-const DMG = [11, 11, 14, 14, 14, 18, 18]
-const CD = [0.9, 0.9, 0.9, 0.75, 0.75, 0.75, 0.75]
-const AMT = [1, 2, 2, 2, 3, 3, 4]
-const PIERCE = [1, 1, 2, 2, 2, 3, 3]
+// A bullet heaven's starter has to clear a crowd, not duel one target: two bolts per volley with
+// pierce from level 1 is what makes the opening minute survivable. Pairs with the design anchor's
+// "Lv 1 ≈ 10–15 DPS single-target" because the extra bolt mostly finds different bodies.
+const DMG = [11, 11, 14, 14, 16, 20, 22]
+const CD = [0.8, 0.8, 0.8, 0.68, 0.68, 0.6, 0.55]
+const AMT = [2, 2, 3, 3, 4, 4, 5]
+const PIERCE = [2, 2, 2, 3, 3, 4, 4]
 const SPEED = [560, 560, 560, 560, 560, 560, 644]
 
 const W = COLOR.W
@@ -73,12 +76,12 @@ export default {
   desc: l('Rattles off bursts of light bolts wherever you aim.', '朝瞄准方向连射光弹，一轮接一轮。'),
   icon: '<path d="M4 22h16M10 32h12M4 42h16" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><rect x="26" y="21" width="34" height="22" rx="11" fill="currentColor"/>',
   levels: [
-    l('+1 bolt per burst', '每轮连射 +1 光弹'),
-    l('+3 damage, +1 pierce', '伤害 +3，贯穿 +1'),
-    l('-0.15s cooldown', '冷却 -0.15 秒'),
-    l('+1 bolt per burst', '每轮连射 +1 光弹'),
-    l('+4 damage, +1 pierce', '伤害 +4，贯穿 +1'),
-    l('+1 bolt per burst, +15% bolt speed', '每轮连射 +1 光弹，弹速 +15%'),
+    l('+3 damage', '伤害 +3'),
+    l('+1 bolt per burst, +20% bolt speed', '每轮连射 +1 光弹，弹速 +20%'),
+    l('+2 damage, -0.12s cooldown', '伤害 +2，冷却 -0.12 秒'),
+    l('+1 bolt per burst, +1 pierce', '每轮连射 +1 光弹，贯穿 +1'),
+    l('+4 damage, -0.08s cooldown', '伤害 +4，冷却 -0.08 秒'),
+    l('+1 bolt per burst, +2 damage, +1 pierce', '每轮连射 +1 光弹，伤害 +2，贯穿 +1'),
   ],
   stats: (lv) => ({ dmg: DMG[lv - 1], cd: CD[lv - 1], area: 1, speed: SPEED[lv - 1], amount: AMT[lv - 1], duration: 1.3, pierce: PIERCE[lv - 1] }),
   fire(wi, w, s) {

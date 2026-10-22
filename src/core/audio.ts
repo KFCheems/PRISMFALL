@@ -770,6 +770,25 @@ class Audio {
     if (t < 0) return 0
     return (t % bar) / bar
   }
+
+  /** Diagnostics for automated tests and the debug overlay: what is playing right now. */
+  debugState() {
+    return { track: this.track, intensity: this.intensityVal, muffled: this.muffled, running: this.ctx?.state === 'running', contextState: this.ctx?.state ?? 'none' }
+  }
+
+  /** Bypass the per-name rate-limiter (tests fire each sound once in a burst). */
+  resetGate(name: Sfx) {
+    delete this.last[name]
+  }
+
+  /** Test-only tap on the master output so a test can measure real signal. */
+  tapMaster(): AnalyserNode | null {
+    if (!this.ctx) return null
+    const an = this.ctx.createAnalyser()
+    an.fftSize = 2048
+    this.master.connect(an)
+    return an
+  }
 }
 
 export const audio = new Audio()

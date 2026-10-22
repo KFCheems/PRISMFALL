@@ -20,7 +20,9 @@ export class CharSelectScreen extends Screen {
 
   constructor() {
     super('chars menu')
-    this.cur = charById.get(memo().char ?? '') ?? CHARACTERS[0]
+    // start on the remembered character, else the first one the player can actually use
+    const remembered = charById.get(memo().char ?? '')
+    this.cur = remembered && isCharUnlocked(remembered.id) ? remembered : (CHARACTERS.find((c) => isCharUnlocked(c.id)) ?? CHARACTERS[0])
     this.render()
     this.el.addEventListener('focusin-nav', (e) => {
       const c = charById.get((e.target as HTMLElement).dataset.id ?? '')
@@ -39,13 +41,17 @@ export class CharSelectScreen extends Screen {
         <div class="cs-detail panel st" style="--i:3"></div>
       </div>
       ${prompts([['confirm', T.select], ['back', T.back]])}`
-    this.on('.ct', (b) => this.choose(charById.get(b.dataset.id!)!))
+    this.on('.ct', (b) => {
+      // a tile click only previews; the CTA commits, so a stray click can never start a run
+      const c = charById.get(b.dataset.id!)
+      if (c) this.show(c)
+    })
     this.show(this.cur)
   }
 
   private tile(c: CharacterDef, i: number) {
     const open = isCharUnlocked(c.id)
-    return `<button class="ct st ${open ? '' : 'locked'} ${c === this.cur ? 'default' : ''}" data-nav data-id="${c.id}" style="--c:${css(c.color)};--i:${i}">
+    return `<button class="ct st ${open ? '' : 'locked'}" data-nav data-id="${c.id}" style="--c:${css(c.color)};--i:${i}">
       ${shapeSvg(c.shape, css(c.color), 'shape')}
       <span class="ct-n">${loc(c.name)}</span>
       ${open ? '' : c.cost ? `<span class="ct-lock">${lumens(c.cost)}</span>` : `<span class="ct-lock">${LOCK}</span>`}
@@ -65,6 +71,8 @@ export class CharSelectScreen extends Screen {
     const d = this.$('.cs-detail')
     d.className = `cs-detail panel ${open ? '' : 'locked'}`
     d.style.setProperty('--c', css(c.color))
+    // mark the tile as the current pick so re-renders and focus restores stay consistent
+    for (const b of this.$$('.ct')) b.classList.toggle('default', b.dataset.id === c.id)
     d.innerHTML = `
       ${portrait(c, 'big')}
       <div class="cs-info">
