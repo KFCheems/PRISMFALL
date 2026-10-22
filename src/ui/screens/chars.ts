@@ -1,5 +1,6 @@
 import { l, loc } from '../../core/i18n'
 import { audio } from '../../core/audio'
+import type { Action } from '../../core/input'
 import { css } from '../../core/math'
 import { save } from '../../core/save'
 import type { CharacterDef } from '../../game/types'
@@ -63,9 +64,9 @@ export class CharSelectScreen extends Screen {
     const open = isCharUnlocked(c.id), wd = weaponById.get(c.weapon), ach = c.unlock ? achById(c.unlock) : undefined
     const afford = !!c.cost && save.data.lumens >= c.cost
     const cta = open
-      ? `<button class="btn prime cta" data-cta>${loc(l('Select', '选择'))}</button>`
+      ? `<button class="btn prime cta" data-nav data-cta>${loc(l('Select', '选择'))}</button>`
       : c.cost
-        ? `<button class="btn cta ${afford ? 'buy' : ''}" data-cta ${afford ? '' : 'disabled'}>${loc(l('Unlock', '解锁'))} ${lumens(c.cost)}</button>
+        ? `<button class="btn cta ${afford ? 'buy' : ''}" data-nav data-cta ${afford ? '' : 'disabled'}>${loc(l('Unlock', '解锁'))} ${lumens(c.cost)}</button>
            ${afford ? '' : `<p class="cs-need">${loc(l('Need {n} more Lumens', '还需 {n} 流明'), { n: c.cost - save.data.lumens })}</p>`}`
         : `<div class="cs-req">${LOCK}<div><small>${loc(l('Achievement required', '需要成就'))}</small><b>${ach ? loc(ach.name) : c.unlock}</b>${ach ? `<span>${loc(ach.desc)}</span>` : ''}</div></div>`
     const d = this.$('.cs-detail')
@@ -87,6 +88,21 @@ export class CharSelectScreen extends Screen {
         <div class="cs-cta">${cta}</div>
       </div>`
     d.querySelector('[data-cta]')?.addEventListener('click', () => this.choose(c))
+  }
+
+  /** Confirm on a focused tile picks it; the CTA button stays available for mouse users. */
+  action(a: Action) {
+    if (a === 'confirm') {
+      // fall back to the tile under the cursor focus, then to the current selection, so a controller
+      // press always does something even if the focus ring has not been placed yet
+      const focused = ui.focus?.classList.contains('ct') ? charById.get(ui.focus.dataset.id ?? '') : undefined
+      const c = focused ?? this.cur
+      if (c) {
+        this.choose(c)
+        return true
+      }
+    }
+    return false
   }
 
   private choose(c: CharacterDef) {

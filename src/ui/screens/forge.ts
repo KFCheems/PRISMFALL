@@ -86,7 +86,7 @@ export class ForgeScreen extends Screen {
         ${maxed
           ? `<span class="fg-maxed">${loc(l('Maxed out', '已达上限'))}</span>`
           : afford
-            ? `<button class="btn prime" data-buy>${loc(l('Forge', '锻造'))} · ${lumens(fmtNum(price))}</button>`
+            ? `<button class="btn prime" data-nav data-buy>${loc(l('Forge', '锻造'))} · ${lumens(fmtNum(price))}</button>`
             : `<button class="btn" disabled>${loc(l('Need {n} more', '还需 {n}'), { n: fmtNum(price - save.data.lumens) })}</button>`}
       </div>`
     box.querySelector('[data-buy]')?.addEventListener('click', () => this.choose(d))

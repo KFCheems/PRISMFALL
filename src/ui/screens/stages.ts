@@ -159,6 +159,11 @@ export class StageSelectScreen extends Screen {
     const f = ui.focus, o = f?.dataset.o
     if (o === 'asc' && (a === 'left' || a === 'right')) return this.setAsc(this.asc + (a === 'left' ? -1 : 1)), true
     if (o === 'endless' && (a === 'left' || a === 'right')) return this.toggleEndless(), true
+    // Confirm on a stage card launches it — a controller player selects and starts in one press.
+    if (a === 'confirm' && f?.classList.contains('sc')) {
+      this.start()
+      return true
+    }
     if (a === 'up' && f && this.$('.ss-opts').contains(f) && f === ui.focusables().find((x) => this.$('.ss-opts').contains(x))) {
       ui.setFocus(this.$(`.sc[data-id=${this.st.id}]`))
       return true
