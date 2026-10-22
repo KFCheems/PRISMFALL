@@ -99,6 +99,8 @@ const fresh = (): SaveData => ({
 
 class Save {
   data: SaveData = fresh()
+  /** the localStorage key this profile lives under (exposed so diagnostics/tests never guess it) */
+  readonly key = KEY
 
   load() {
     const raw = localStorage.getItem(KEY) ?? localStorage.getItem(LEGACY_KEY)
@@ -106,7 +108,30 @@ class Save {
     if (raw) {
       try {
         const d = JSON.parse(raw) as Partial<SaveData>
-        this.data = { ...base, ...d, stats: { ...base.stats, ...d.stats }, settings: { ...base.settings, ...d.settings } }
+        // Spread every top-level field over the defaults, then repair the nested containers individually:
+        // an older or truncated save that is missing `shop`/`charWins`/`cleared` must still boot with usable
+        // objects, because the Forge and achievement screens iterate them directly.
+        this.data = {
+          ...base,
+          ...d,
+          v: 1,
+          stats: { ...base.stats, ...(d.stats ?? {}) },
+          settings: { ...base.settings, ...(d.settings ?? {}) },
+          shop: { ...base.shop, ...(d.shop ?? {}) },
+          cleared: { ...base.cleared, ...(d.cleared ?? {}) },
+          charWins: { ...base.charWins, ...(d.charWins ?? {}) },
+          chars: Array.isArray(d.chars) ? d.chars : base.chars,
+          stages: Array.isArray(d.stages) ? d.stages : base.stages,
+          weapons: Array.isArray(d.weapons) ? d.weapons : base.weapons,
+          achievements: Array.isArray(d.achievements) ? d.achievements : base.achievements,
+          seen: Array.isArray(d.seen) ? d.seen : base.seen,
+          history: Array.isArray(d.history) ? d.history : base.history,
+          pending: Array.isArray(d.pending) ? d.pending : base.pending,
+        }
+        // a save from before a field existed can have it undefined; make sure the counters are numbers
+        for (const k of Object.keys(base.stats) as (keyof SaveData['stats'])[]) {
+          if (typeof (this.data.stats as any)[k] !== 'number') (this.data.stats as any)[k] = base.stats[k]
+        }
       } catch {
         // a corrupt entry must never brick the game — start clean instead
         this.data = base

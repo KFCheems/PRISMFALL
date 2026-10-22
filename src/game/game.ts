@@ -71,7 +71,11 @@ class Game {
   }
 
   pause() {
-    if (this.world && !ui.blocking) ui.push(new PauseScreen(this.world))
+    // `ui.blocking` only becomes true once the pause screen is marked modal, so two Escape presses in the
+    // same opening window used to push two PauseScreens. Check for an existing one explicitly.
+    if (!this.world) return
+    if (ui.stack.some((s) => s instanceof PauseScreen)) return
+    ui.push(new PauseScreen(this.world))
   }
 
   frame(dt: number) {
