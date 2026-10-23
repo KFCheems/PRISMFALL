@@ -12,6 +12,7 @@ import { ui } from '../ui/ui'
 import { Hud } from '../ui/hud'
 import { LevelUpScreen } from '../ui/screens/levelup'
 import { ChestScreen } from '../ui/screens/chest'
+import { MainMenu } from '../ui/screens/menu'
 import { PauseScreen } from '../ui/screens/pause'
 import { ResultsScreen } from '../ui/screens/results'
 
@@ -64,6 +65,15 @@ class Game {
     this.hud?.destroy()
     this.hud = null
     this.world = null
+  }
+
+  /** Abandon the current run and return to the main menu. Used by the fatal-error recovery card. */
+  toMenu() {
+    this.end()
+    ui.reset()
+    audio.muffle(false)
+    audio.music('menu')
+    ui.replace(new MainMenu())
   }
 
   restart() {

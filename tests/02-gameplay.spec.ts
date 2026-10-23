@@ -65,18 +65,31 @@ test.describe('starting a run', () => {
   test('dash gives i-frames and has a cooldown', async ({ page }) => {
     await startRun(page)
     await inRun(page)
+    // Dash state decays within a fraction of a second, so sampling once after a fixed delay is racy under
+    // load. Record the peak values the game actually reached instead.
+    await page.evaluate(() => {
+      const p = window.__pf.game.world!.p as any
+      const w = window as any
+      w.__peak = { dashT: 0, iframes: 0, cd: 0 }
+      w.__peakTimer = setInterval(() => {
+        w.__peak.dashT = Math.max(w.__peak.dashT, p.dashT)
+        w.__peak.iframes = Math.max(w.__peak.iframes, p.iframes)
+        w.__peak.cd = Math.max(w.__peak.cd, p.dashCd)
+      }, 8)
+    })
     await page.keyboard.down('KeyD')
     await page.waitForTimeout(150)
     await page.keyboard.press('Space')
-    await page.waitForTimeout(60)
-    const dash = await page.evaluate(() => {
-      const p = window.__pf.game.world!.p
-      return { dashT: p.dashT, iframes: p.iframes, cd: p.dashCd }
-    })
+    await page.waitForTimeout(400)
     await page.keyboard.up('KeyD')
-    expect(dash.dashT).toBeGreaterThan(0)
-    expect(dash.iframes).toBeGreaterThan(0)
-    expect(dash.cd).toBeGreaterThan(0)
+    const dash = await page.evaluate(() => {
+      const w = window as any
+      clearInterval(w.__peakTimer)
+      return w.__peak as { dashT: number; iframes: number; cd: number }
+    })
+    expect(dash.dashT, 'dash should have started').toBeGreaterThan(0)
+    expect(dash.iframes, 'dash should grant i-frames').toBeGreaterThan(0)
+    expect(dash.cd, 'dash should go on cooldown').toBeGreaterThan(0)
   })
 
   test('enemies spawn and the player weapon kills them', async ({ page }) => {
